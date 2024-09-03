@@ -1,0 +1,14 @@
+langchain
+langchain-community
+langchainhub 
+langchain-chroma 
+bs4
+langchain-openai
+pypdf
+fastapi
+uvicorn
+python-multipart
+langchain-groq
+pytube
+youtube-transcript-api
+langchain-ollama

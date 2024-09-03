@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot Platform</title>
+    <style>
+        /* ... (keep the existing styles) ... */
+    </style>
+</head>
+<body>
+    <h1>AI Chatbot Platform</h1>
+    
+    <div class="container">
+        <h2>Create Chatbot</h2>
+        <form id="chatbotForm">
+            <label for="companyId">Company ID:</label>
+            <input type="text" id="companyId" required>
+            
+            <label for="files">Upload PDF Documents:</label>
+            <input type="file" id="files" multiple accept=".pdf" required>
+            
+            <button type="submit" id="submitBtn">Generate Chatbot</button>
+        </form>
+        <div id="error"></div>
+        <div id="success"></div>
+    </div>
+
+    <div class="container" id="embedScriptContainer" style="display: none;">
+        <h2>Embed Script</h2>
+        <p>Copy and paste this script tag into your website to embed the chatbot:</p>
+        <pre id="embedScript"></pre>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('chatbotForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const errorDiv = document.getElementById('error');
+            const successDiv = document.getElementById('success');
+            const embedScriptContainer = document.getElementById('embedScriptContainer');
+            const embedScriptPre = document.getElementById('embedScript');
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevent form submission
+                handleSubmit();
+            });
+
+            async function handleSubmit() {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Processing...';
+                errorDiv.textContent = '';
+                successDiv.textContent = '';
+                embedScriptContainer.style.display = 'none';
+
+                const companyId = document.getElementById('companyId').value;
+                const files = document.getElementById('files').files;
+
+                if (!companyId || files.length === 0) {
+                    errorDiv.textContent = 'Please fill in all fields.';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Generate Chatbot';
+                    return;
+                }
+
+                const formData = new FormData();
+                for (let i = 0; i < files.length; i++) {
+                    formData.append('files', files[i]);
+                }
+
+                try {
+                    // Upload documents
+                    const uploadResponse = await fetch(`http://localhost:8000/upload_documents/${companyId}`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!uploadResponse.ok) {
+                        throw new Error('Failed to upload documents');
+                    }
+
+                    // Generate embed script
+                    const scriptResponse = await fetch(`http://localhost:8000/chatbot_script/${companyId}`);
+                    
+                    if (!scriptResponse.ok) {
+                        throw new Error('Failed to generate embed script');
+                    }
+
+                    const scriptContent = await scriptResponse.text();
+                    
+                    // Display success message
+                    successDiv.textContent = 'Chatbot created successfully!';
+                    
+                    // Display embed script
+                    embedScriptPre.textContent = `<script src="http://localhost:8000/chatbot_script/${companyId}"><\/script>`;
+                    embedScriptContainer.style.display = 'block';
+
+                } catch (error) {
+                    errorDiv.textContent = 'An error occurred: ' + error.message;
+                    console.error('Error:', error);
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Generate Chatbot';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
